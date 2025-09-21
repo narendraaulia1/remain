@@ -420,7 +420,7 @@ export default function Login() {
                 margin: "0 0 10px 0",
               }}
             >
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a href="register">
                 <button
                   style={{

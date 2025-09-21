@@ -1,27 +1,28 @@
 // pages/_document.js
-import Document, { Html, Head, Main, NextScript } from "next/document";
+import { Html, Head, Main, NextScript } from "next/document";
+import Script from "next/script";
 
-class MyDocument extends Document {
-  render() {
-    return (
-      <Html>
-        <Head>
-          {/* Tailwind Play CDN - cepat untuk prototipe */}
-          <script src="https://cdn.tailwindcss.com"></script>
-          {/* opsional: konfigurasi singkat */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `tailwind.config = { theme: { extend: {} } }`,
-            }}
-          />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
+export default function Document() {
+  return (
+    <Html lang="en">
+      <Head>
+        {/* Tailwind Play CDN via Next Script */}
+        <Script
+          src="https://cdn.tailwindcss.com"
+          strategy="beforeInteractive"
+        />
+        <Script
+          id="tailwind-config"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `tailwind.config = { theme: { extend: {} } }`,
+          }}
+        />
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
 }
-
-export default MyDocument;
