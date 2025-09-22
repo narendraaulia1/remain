@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from '../lib/supabaseClient';
+
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -13,76 +17,51 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setMessage("");
 
-    // Simulasi API call - ganti dengan kode Supabase Anda
     try {
-      // Simulasi delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simulasi success
-      setIsSuccess(true);
-      setMessage("Registrasi berhasil! Silakan login.");
-      
-      // Reset form setelah success
-      setTimeout(() => {
-        setEmail("");
-        setPassword("");
-        setIsSuccess(false);
-        setMessage("");
-      }, 3000);
-    } catch (error) {
-      setMessage("Terjadi kesalahan saat registrasi");
-    } finally {
-      setIsLoading(false);
-    }
+      // 1. Sign up user
+      const { data, error } = await supabase.auth.signUp({ email, password });
 
-    /*
-    // Uncomment dan gunakan kode ini untuk integrasi Supabase yang sebenarnya:
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setIsLoading(false);
-      return;
-    }
-
-    const user = data.user ?? data.session?.user;
-
-    if (!user) {
-      setMessage("Gagal mendapatkan user ID setelah sign up.");
-      setIsLoading(false);
-      return;
-    }
-
-    const { data: existingProfile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("id", user.id)
-      .single();
-
-    if (!existingProfile) {
-      const { error: insertError } = await supabase.from("profiles").insert([
-        {
-          id: user.id,
-          email: user.email,
-        },
-      ]);
-
-      if (insertError) {
-        setMessage(insertError.message);
+      if (error) {
+        setMessage(error.message);
         setIsLoading(false);
         return;
       }
-    }
 
-    setIsSuccess(true);
-    setMessage("Registrasi berhasil! Silakan login.");
-    setIsLoading(false);
-    */
+      const user = data.user ?? data.session?.user;
+
+      if (!user) {
+        setMessage("Gagal mendapatkan user ID setelah sign up.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 2. Insert profile setelah user berhasil dibuat
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .insert([{ id: user.id, email }]); // pastikan id sama dengan auth.users.id
+
+      if (profileError) {
+        setMessage("Database error saving new user: " + profileError.message);
+        setIsLoading(false);
+        return;
+      }
+
+      // 3. Berhasil → redirect ke halaman login
+setIsSuccess(true);
+setMessage("Registrasi berhasil! Mengarahkan ke login...");
+
+setTimeout(() => {
+  router.push("/login"); // ← redirect ke login
+}, 1500); // jeda 1.5 detik supaya user sempat lihat pesan
+
+
+    } catch (err) {
+      setMessage("Terjadi error: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -96,7 +75,6 @@ export default function RegisterPage() {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       
-      {/* Background decorative elements */}
       <div style={{
         position: 'absolute',
         top: '10%',
@@ -128,7 +106,6 @@ export default function RegisterPage() {
         zIndex: 1
       }}>
         
-        {/* Main Register Card */}
         <div style={{
           background: 'white',
           borderRadius: '20px',
@@ -139,7 +116,6 @@ export default function RegisterPage() {
           overflow: 'hidden'
         }}>
           
-          {/* Yellow accent bar */}
           <div style={{
             position: 'absolute',
             top: 0,
@@ -149,7 +125,6 @@ export default function RegisterPage() {
             background: 'linear-gradient(90deg, #ffd60a, #ffbe0b)',
           }}></div>
 
-          {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: '40px' }}>
             <div style={{
               display: 'inline-flex',
@@ -163,7 +138,6 @@ export default function RegisterPage() {
               position: 'relative',
               overflow: 'hidden'
             }}>
-              {/* Yellow corner accent */}
               <div style={{
                 position: 'absolute',
                 top: '-10px',
@@ -200,7 +174,6 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* Error/Success Message */}
           {message && (
             <div style={{
               padding: '12px 16px',
@@ -219,10 +192,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Form */}
           <div style={{ marginBottom: '30px' }}>
             
-            {/* Email Input */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{
                 display: 'block',
@@ -266,7 +237,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Password Input */}
             <div style={{ marginBottom: '30px' }}>
               <label style={{
                 display: 'block',
@@ -332,7 +302,6 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Register Button */}
             <button
               type="button"
               onClick={handleRegister}
@@ -370,7 +339,6 @@ export default function RegisterPage() {
                 }
               }}
             >
-              {/* Yellow hover effect */}
               <div style={{
                 position: 'absolute',
                 top: 0,
@@ -402,7 +370,6 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          {/* Login Link */}
           <div style={{ textAlign: 'center' }}>
             <p style={{
               color: '#6c757d',
@@ -447,7 +414,6 @@ export default function RegisterPage() {
           </div>
         </div>
         
-        {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '30px' }}>
           <p style={{
             color: '#6c757d',
